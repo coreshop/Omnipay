@@ -1,5 +1,5 @@
 {
-  "name": "coreshop/Omnipay",
+  "name": "coreshop/omnipay",
   "type": "pimcore-plugin",
   "license": "GPLv3",
   "description": "Omnipay Payment for CoreShop",
