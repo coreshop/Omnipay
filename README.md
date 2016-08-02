@@ -1,9 +1,9 @@
 Omnipay
 ================
 
-[![Latest Stable Version](https://poser.pugx.org/coreshop/Omnipay/v/stable)](https://packagist.org/packages/coreshop/Omnipay)
-[![Total Downloads](https://poser.pugx.org/coreshop/Omnipay/downloads)](https://packagist.org/packages/coreshop/Omnipay)
-[![License](https://poser.pugx.org/coreshop/Omnipay/license)](https://packagist.org/packages/coreshop/Omnipay)
+[![Latest Stable Version](https://poser.pugx.org/coreshop/omnipay/v/stable)](https://packagist.org/packages/coreshop/omnipay)
+[![Total Downloads](https://poser.pugx.org/coreshop/omnipay/downloads)](https://packagist.org/packages/coreshop/omnipay)
+[![License](https://poser.pugx.org/coreshop/omnipay/license)](https://packagist.org/packages/coreshop/omnipay)
 
 Omnipay Payment Plugin for Pimcore
 
