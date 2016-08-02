@@ -1,0 +1,40 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "260832bd023676f57472a4801ab0d74a",
+    "packages": [
+        {
+            "name": "smichaelsen/sofortlib-php-payment",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/smichaelsen/SofortLib-PHP-Payment.git",
+                "reference": "63f72ab7ba344ce8428b91a86303fdb8084c74f9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/smichaelsen/SofortLib-PHP-Payment/zipball/63f72ab7ba344ce8428b91a86303fdb8084c74f9",
+                "reference": "63f72ab7ba344ce8428b91a86303fdb8084c74f9",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "payment/sofortLibSofortueberweisung.inc.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "time": "2014-03-13 13:28:16"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "platform": [],
+    "platform-dev": []
+}
