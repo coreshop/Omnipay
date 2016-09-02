@@ -5,7 +5,7 @@
             <h3 class="panel-title"><?=$this->translate($this->module->getName())?></h3>
         </div>
         <div class="panel-body delivery-options">
-            <p><?=sprintf($this->translate("Do you want to pay the amount %s with %s?", \CoreShop\Tool::formatPrice($this->cart->getTotal()), $this->translate($this->module->getName())))?></p>
+            <p><?=sprintf($this->translate("Do you want to pay the amount %s with %s?", \CoreShop::getTools()->formatPrice($this->cart->getTotal()), $this->translate($this->module->getName())))?></p>
 
             <div class="row">
                 <div class="col-xs-12">
