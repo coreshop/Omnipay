@@ -24,6 +24,11 @@ use Pimcore\API\Plugin\PluginInterface;
 class Plugin extends AbstractPlugin implements PluginInterface
 {
     /**
+     * @var int
+     */
+    private static $requiredCoreShopBuild = 72;
+
+    /**
      * @var Shop
      */
     private static $shop;
@@ -74,6 +79,17 @@ class Plugin extends AbstractPlugin implements PluginInterface
      */
     public static function isInstalled()
     {
+        $p = PIMCORE_PLUGINS_PATH . '/CoreShop/Plugin.xml';
+
+        if( !file_exists($p)) {
+            return false;
+        }
+
+        $config = new \Zend_Config_Xml($p);
+        if( (int) $config->plugin->pluginRevision < self::$requiredCoreShopBuild) {
+            return false;
+        }
+
         try {
             \Pimcore\Model\Object\Objectbrick\Definition::getByKey("CoreShopPaymentOmnipay");
 
@@ -89,6 +105,10 @@ class Plugin extends AbstractPlugin implements PluginInterface
      */
     public static function install()
     {
+        if( !class_exists("CoreShop\\Version") || (int) \CoreShop\Version::getBuildNumber() < self::$requiredCoreShopBuild ) {
+            return 'You need CoreShop (at least build' . self::$requiredCoreShopBuild .') to run this plugin.';
+        }
+
         if (class_exists("\\CoreShop\\Plugin")) {
             \CoreShop\Plugin::installPlugin(self::getShop()->getInstall());
         }
