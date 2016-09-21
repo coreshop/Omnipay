@@ -19,3 +19,4 @@ composer require coreshop/Omnipay 1.0
 Omnipay depends on the great Omnipay PHP Library [https://github.com/thephpleague/omnipay](https://github.com/thephpleague/omnipay). CoreShop Omnipay supports following Gateways
 
  - Worldpay
+ - Postfinance
