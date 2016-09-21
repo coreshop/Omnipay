@@ -19,8 +19,8 @@ use CoreShop\Model;
  */
 class Omnipay_AdminController extends \CoreShop\Plugin\Controller\Admin
 {
-    public function getProvidersAction() {
-        $gateways = \Omnipay\Omnipay::getFactory()->getSupportedGateways();
+    public function getProvidersAction(){
+        $gateways = \Omnipay\Tool::getSupportedGateways();
         $available = [];
         $activeProviders = Model\Configuration::get("OMNIPAY.ACTIVEPROVIDERS");
 
@@ -42,7 +42,8 @@ class Omnipay_AdminController extends \CoreShop\Plugin\Controller\Admin
         $this->_helper->json(array("data" => $available));
     }
 
-    public function getProviderOptionsAction() {
+    public function getProviderOptionsAction()
+    {
         $provider = $this->getParam("provider");
 
         $gateway = \Omnipay\Omnipay::getFactory()->create($provider);
@@ -50,7 +51,8 @@ class Omnipay_AdminController extends \CoreShop\Plugin\Controller\Admin
         $this->_helper->json(array("options" => $gateway->getParameters()));
     }
 
-    public function getActiveProvidersAction() {
+    public function getActiveProvidersAction()
+    {
         $activeProviders = Model\Configuration::get("OMNIPAY.ACTIVEPROVIDERS");
         $result = [];
 
@@ -63,10 +65,12 @@ class Omnipay_AdminController extends \CoreShop\Plugin\Controller\Admin
         $this->_helper->json($result);
     }
 
-    public function addProviderAction() {
+    public function addProviderAction()
+    {
         $gateway = $this->getParam("provider");
+        $gateways = \Omnipay\Tool::getSupportedGateways();
 
-        if(in_array($gateway, \Omnipay\Omnipay::getFactory()->getSupportedGateways())) {
+        if(in_array($gateway, $gateways)) {
             $activeProviders = Model\Configuration::get("OMNIPAY.ACTIVEPROVIDERS");
 
             if(!is_array($activeProviders)) {

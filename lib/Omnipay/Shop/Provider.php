@@ -191,10 +191,12 @@ class Provider extends CorePayment
      */
     public function url($module, $action, $params = [])
     {
-        $route = Staticroute::getByName("coreshop_omnipay_payment");
-
         $params = array_merge($params, array('gateway' => $this->getGateway()->getShortName(), 'mod' => "Omnipay", 'act' => $action, 'lang' => (string) \Zend_Registry::get('Zend_Locale')));
 
-        return $route->assemble($params);
+        $url = \CoreShop::getTools()->url($params, "coreshop_omnipay_payment");
+        $url = str_replace("/omnipay/", "/Omnipay/", $url);
+        $url = str_replace("/" . strtolower( $this->getGateway()->getName() ), "/" . $this->getGateway()->getName(), $url);
+
+        return $url;
     }
 }

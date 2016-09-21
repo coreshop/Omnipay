@@ -1,4 +1,4 @@
-<form method="post" stlye="display:none" id="redirect">
+<form method="post" action="<?= $this->response->getRedirectUrl(); ?>" style="display:none;" id="redirect">
     <?php foreach($this->response->getRedirectData() as $key => $value) {
         ?>
         <input type="hidden" name="<?=$key?>" value="<?=$value?>" />

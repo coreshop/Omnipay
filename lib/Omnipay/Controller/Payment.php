@@ -70,7 +70,7 @@ class Payment extends \CoreShop\Controller\Action\Payment
     public function getModule()
     {
         if (is_null($this->module)) {
-            $this->module = \CoreShop\Plugin::getPaymentProvider("omnipay" . $this->gateway);
+            $this->module = \CoreShop::getPaymentProvider("omnipay" . $this->gateway);
         }
 
         return $this->module;

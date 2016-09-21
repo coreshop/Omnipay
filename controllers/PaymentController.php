@@ -13,7 +13,6 @@
  */
 
 use Omnipay\Controller\Payment;
-use CoreShop\Tool;
 
 /**
  * Class Omnipay_PaymentController
@@ -34,7 +33,7 @@ class Omnipay_PaymentController extends Payment
         $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return");
         $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return-abort");
         $params['amount'] = $this->cart->getTotal();
-        $params['currency'] = Tool::getCurrency()->getIsoCode();
+        $params['currency'] = \Coreshop::getTools()->getCurrency()->getIsoCode();
         $params['transactionId'] = uniqid();
 
         if(count($cardParams) > 0) {
@@ -74,7 +73,7 @@ class Omnipay_PaymentController extends Payment
 
     public function paymentReturnAbortAction()
     {
-        $this->redirect($this->view->url(array(), "coreshop_index"));
+        $this->redirect( \CoreShop::getTools()->url(array('lang' => $this->view->language), "coreshop_index") );
     }
 
     public function errorAction() {
@@ -102,7 +101,7 @@ class Omnipay_PaymentController extends Payment
     public function getModule()
     {
         if (is_null($this->module)) {
-            $this->module = \CoreShop\Plugin::getPaymentProvider("omnipay" . $this->gateway);
+            $this->module = \CoreShop::getPaymentProvider("omnipay" . $this->gateway);
         }
 
         return $this->module;
