@@ -46,12 +46,6 @@ class Payment extends \CoreShop\Controller\Action\Payment
             array_merge(
                 array(
                     $pluginPath,
-                    /*CORESHOP_TEMPLATE_BASE.'/scripts/omnipay/payment',
-                    CORESHOP_TEMPLATE_BASE.'/scripts/coreshop/omnipay/payment',
-                    CORESHOP_TEMPLATE_PATH.'/scripts/omnipay/payment',
-                    CORESHOP_TEMPLATE_PATH.'/scripts/coreshop/omnipay/payment',
-                    PIMCORE_WEBSITE_PATH.'/views/scripts/omnipay/payment',
-                    PIMCORE_WEBSITE_PATH.'/views/scripts/coreshop/omnipay/payment',*/
                     CORESHOP_TEMPLATE_BASE.'/scripts/omnipay/' . $gatewayName,
                     CORESHOP_TEMPLATE_BASE.'/scripts/coreshop/omnipay/' . $gatewayName,
                     CORESHOP_TEMPLATE_PATH.'/scripts/omnipay/' . $gatewayName,
