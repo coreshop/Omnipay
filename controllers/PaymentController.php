@@ -27,18 +27,7 @@ class Omnipay_PaymentController extends Payment
             throw new \CoreShop\Exception("Gateway doesn't support purchase!");
         }
 
-        $cardParams = $this->getParam("card", []);
-
-        $params = $this->getAllParams();
-        $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return");
-        $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return-abort");
-        $params['amount'] = $this->cart->getTotal();
-        $params['currency'] = \Coreshop::getTools()->getCurrency()->getIsoCode();
-        $params['transactionId'] = uniqid();
-
-        if(count($cardParams) > 0) {
-            $params['card'] = new \Omnipay\Common\CreditCard($cardParams);
-        }
+        $params = $this->getGatewayParams();
 
         $response = $gateway->purchase($params)->send();
 
@@ -73,10 +62,11 @@ class Omnipay_PaymentController extends Payment
 
     public function paymentReturnAbortAction()
     {
-        $this->redirect( \CoreShop::getTools()->url(array('lang' => $this->view->language), "coreshop_index") );
+        $this->coreShopForward("canceled", "checkout", "CoreShop", []);
     }
 
-    public function errorAction() {
+    public function errorAction()
+    {
         $this->coreShopForward("error", "checkout", "CoreShop", []);
     }
 
@@ -105,5 +95,29 @@ class Omnipay_PaymentController extends Payment
         }
 
         return $this->module;
+    }
+
+    /**
+     * Get all required Params for gateway.
+     * extend this in your custom omnipay controller.
+     *
+     * @return array
+     */
+    public function getGatewayParams()
+    {
+        $cardParams = $this->getParam("card", []);
+
+        $params = $this->getAllParams();
+        $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return");
+        $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return-abort");
+        $params['amount'] = $this->cart->getTotal();
+        $params['currency'] = \Coreshop::getTools()->getCurrency()->getIsoCode();
+        $params['transactionId'] = uniqid();
+
+        if(count($cardParams) > 0) {
+            $params['card'] = new \Omnipay\Common\CreditCard($cardParams);
+        }
+
+        return $params;
     }
 }

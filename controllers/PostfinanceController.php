@@ -19,7 +19,107 @@ require "PaymentController.php";
  */
 class Omnipay_PostfinanceController extends Omnipay_PaymentController
 {
+    /**
+     * This Action listen to server2server communication
+     */
+    public function paymentReturnServerAction()
+    {
+        $requestData = $this->parseRequestData();
+
+        \Pimcore\Logger::log('paymentReturnServer from Postfinance. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status'], 'notice');
+
+        if($requestData['status'] === 5) {
+            if (!empty( $requestData['transaction'] )) {
+                $cart = \CoreShop\Model\Cart::findByCustomIdentifier( $requestData['transaction'] );
+
+                if ($cart instanceof \CoreShop\Model\Cart) {
+                    $order = $cart->createOrder(\CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")), $this->getModule(), $this->cart->getTotal(), $this->view->language);
+
+                    $payments = $order->getPayments();
+
+                    foreach ($payments as $p) {
+                        $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
+                        $dataBrick->setTransactionId( $requestData['transaction'] );
+
+                        $p->save();
+                    }
+
+                }
+            }
+        }
+    }
+
+    /**
+     * This Action can be called via Frontend
+     * @throws \CoreShop\Exception
+     * @throws \CoreShop\Exception\ObjectUnsupportedException
+     */
     public function paymentReturnAction()
+    {
+        $requestData = $this->parseRequestData();
+
+        \Pimcore\Logger::log('paymentReturn from Postfinance. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status'], 'notice');
+
+        $redirectUrl = '';
+
+        if($requestData['status'] === 5) {
+            if (!empty( $requestData['transaction'] )) {
+                $cart = \CoreShop\Model\Cart::findByCustomIdentifier( $requestData['transaction'] );
+
+                if ($cart instanceof \CoreShop\Model\Cart) {
+                    $order = $cart->createOrder(
+                        \CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")),
+                        $this->getModule(),
+                        $this->cart->getTotal(),
+                        $this->view->language
+                    );
+
+                    $payments = $order->getPayments();
+
+                    foreach ($payments as $p) {
+                        $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
+                        $dataBrick->setTransactionId( $requestData['transaction'] );
+
+                        $p->save();
+                    }
+
+                    $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
+                } else {
+                    $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+                }
+            } else {
+                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+            }
+        } else {
+            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+        }
+
+        $this->redirect( $redirectUrl );
+    }
+
+    public function getGatewayParams()
+    {
+        $params = parent::getGatewayParams();
+
+        $language = $this->language;
+        $gatewayLanguage = 'en_EN';
+
+        if( $language === 'de') {
+            $gatewayLanguage = 'de_DE';
+        } else if( $language === 'en') {
+            $gatewayLanguage = 'en_EN';
+        } else if( $language === 'fr') {
+            $gatewayLanguage = 'fr_FR';
+        } else if( $language === 'it') {
+            $gatewayLanguage = 'it_IT';
+        }
+
+        $params['language'] = $gatewayLanguage;
+
+        return $params;
+    }
+
+    private function parseRequestData()
     {
         /**
          * @var $transaction
@@ -57,35 +157,12 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
          */
         $ncError = $_REQUEST['NCERROR'];
 
-        \Pimcore\Logger::log('Payment return from Postfinance. TransactionID: ' . $transaction . ', Status: ' . $status, 'notice');
-
-        if($status === 5) {
-            if (!empty($transaction)) {
-                $cart = \CoreShop\Model\Cart::findByCustomIdentifier($transaction);
-
-                if ($cart instanceof \CoreShop\Model\Cart) {
-                    $order = $cart->createOrder(\CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")), $this->getModule(), $this->cart->getTotal(), $this->view->language);
-
-                    $payments = $order->getPayments();
-
-                    foreach ($payments as $p) {
-                        $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
-                        $dataBrick->setTransactionId($transaction);
-
-                        $p->save();
-                    }
-
-                    $this->view->redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
-                } else {
-                    $this->view->redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
-                }
-            } else {
-                $this->view->redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
-            }
-        } else {
-            $this->view->redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
-        }
-
-        $this->disableLayout();
+        return array(
+            'transaction' => $transaction,
+            'status' => $status,
+            'payId' => $payId,
+            'payIdSub' => $payIdSub,
+            'ncError' => $ncError
+        );
     }
 }
