@@ -104,14 +104,9 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         $language = $this->language;
         $gatewayLanguage = 'en_EN';
 
-        if( $language === 'de') {
-            $gatewayLanguage = 'de_DE';
-        } else if( $language === 'en') {
-            $gatewayLanguage = 'en_EN';
-        } else if( $language === 'fr') {
-            $gatewayLanguage = 'fr_FR';
-        } else if( $language === 'it') {
-            $gatewayLanguage = 'it_IT';
+        if( !empty( $language ) )
+        {
+            $gatewayLanguage = $language . '_' . strtoupper( $language );
         }
 
         $params['language'] = $gatewayLanguage;
