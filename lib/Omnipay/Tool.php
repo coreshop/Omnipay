@@ -11,10 +11,20 @@
  * @copyright  Copyright (c) 2015-2016 Dominik Pfaffenbauer (https://www.pfaffenbauer.at)
  * @license    https://www.coreshop.org/license     GNU General Public License version 3 (GPLv3)
  */
+
 namespace Omnipay;
 
+/**
+ * Class Tool
+ * @package Omnipay
+ */
 class Tool
 {
+    /**
+     * Get all supported payment gateways
+     *
+     * @return mixed
+     */
     public static function getSupportedGateways()
     {
         $package = json_decode(file_get_contents(PIMCORE_PLUGINS_PATH.'/Omnipay/composer.json'), TRUE);
