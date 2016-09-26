@@ -26,6 +26,9 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
     {
         $requestData = $this->parseRequestData();
 
+        $this->disableLayout();
+        $this->disableViewAutoRender();
+
         \Pimcore\Logger::log('paymentReturnServer from Postfinance. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status'], 'notice');
 
         if($requestData['status'] === 5) {
