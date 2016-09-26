@@ -3,7 +3,7 @@
 	<plugin>
 		<pluginName>Omnipay</pluginName>
 		<pluginDescription><![CDATA[Omnipay Plugin for CoreShop]]></pluginDescription>
-		<pluginVersion>1.1.0</pluginVersion>
+		<pluginVersion>1.0.0</pluginVersion>
 		<pluginRevision>1</pluginRevision>
 		<pluginBuildTimestamp>0</pluginBuildTimestamp>
 		<pluginClassName>\Omnipay\Plugin</pluginClassName>
