@@ -33,7 +33,12 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                 $cart = \CoreShop\Model\Cart::findByCustomIdentifier( $requestData['transaction'] );
 
                 if ($cart instanceof \CoreShop\Model\Cart) {
-                    $order = $cart->createOrder(\CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")), $this->getModule(), $this->cart->getTotal(), $this->view->language);
+                    $order = $cart->createOrder(
+                        \CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")),
+                        $this->getModule(),
+                        $cart->getTotal(),
+                        $this->view->language
+                    );
 
                     $payments = $order->getPayments();
 
@@ -70,7 +75,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                     $order = $cart->createOrder(
                         \CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")),
                         $this->getModule(),
-                        $this->cart->getTotal(),
+                        $cart->getTotal(),
                         $this->view->language
                     );
 
