@@ -44,6 +44,7 @@ class Payment extends \CoreShop\Controller\Action\Payment
 
         $this->view->setScriptPath(
             array_merge(
+                $this->view->getScriptPaths(),
                 array(
                     $pluginPath,
                     CORESHOP_TEMPLATE_BASE.'/scripts/omnipay/' . $gatewayName,
@@ -52,8 +53,7 @@ class Payment extends \CoreShop\Controller\Action\Payment
                     CORESHOP_TEMPLATE_PATH.'/scripts/coreshop/omnipay/' . $gatewayName,
                     PIMCORE_WEBSITE_PATH.'/views/scripts/omnipay/' . $gatewayName,
                     PIMCORE_WEBSITE_PATH.'/views/scripts/coreshop/omnipay/' . $gatewayName,
-                ),
-                $this->view->getScriptPaths()
+                )
             )
         );
     }
