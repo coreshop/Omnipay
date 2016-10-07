@@ -93,13 +93,13 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
                     $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
                 } else {
-                    $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+                    $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'cart with identifier' . $requestData['transaction'] . 'not found' );
                 }
             } else {
-                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'no valid transaction id given' );
             }
         } else {
-            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl();
+            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'Postfinance returned with an error. Error Status: ' . $requestData['status'] );
         }
 
         $this->redirect( $redirectUrl );
