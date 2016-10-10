@@ -29,13 +29,16 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         $this->disableLayout();
         $this->disableViewAutoRender();
 
-        \Pimcore\Logger::log('paymentReturnServer from Postfinance. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status'], 'notice');
+        \Pimcore\Logger::log('OmniPay paymentReturnServer [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
 
         if($requestData['status'] === 5) {
             if (!empty( $requestData['transaction'] )) {
                 $cart = \CoreShop\Model\Cart::findByCustomIdentifier( $requestData['transaction'] );
 
                 if ($cart instanceof \CoreShop\Model\Cart) {
+
+                    \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: create order with: ' . $requestData['transaction']);
+
                     $order = $cart->createOrder(
                         \CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")),
                         $this->getModule(),
@@ -48,13 +51,21 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                     foreach ($payments as $p) {
                         $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
                         $dataBrick->setTransactionId( $requestData['transaction'] );
-
                         $p->save();
                     }
 
+                }else {
+                    \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: Cart with identifier' . $requestData['transaction'] . 'not found');
                 }
+            } else {
+
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: No valid transaction id given');
             }
+        } else {
+            \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: Error Status: ' . $requestData['status']);
         }
+
+        exit;
     }
 
     /**
@@ -66,7 +77,10 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
     {
         $requestData = $this->parseRequestData();
 
-        \Pimcore\Logger::log('paymentReturn from Postfinance. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status'], 'notice');
+        $this->disableLayout();
+        $this->disableViewAutoRender();
+
+        \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
 
         $redirectUrl = '';
 
@@ -75,6 +89,9 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                 $cart = \CoreShop\Model\Cart::findByCustomIdentifier( $requestData['transaction'] );
 
                 if ($cart instanceof \CoreShop\Model\Cart) {
+
+                    \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: create order with: ' . $requestData['transaction']);
+
                     $order = $cart->createOrder(
                         \CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")),
                         $this->getModule(),
@@ -87,22 +104,26 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                     foreach ($payments as $p) {
                         $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
                         $dataBrick->setTransactionId( $requestData['transaction'] );
-
                         $p->save();
                     }
 
                     $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
                 } else {
+                    \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: Cart with identifier' . $requestData['transaction'] . 'not found');
                     $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'cart with identifier' . $requestData['transaction'] . 'not found' );
                 }
             } else {
+
+                \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: No valid transaction id given');
                 $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'no valid transaction id given' );
             }
         } else {
+            \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: Error Status: ' . $requestData['status']);
             $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'Postfinance returned with an error. Error Status: ' . $requestData['status'] );
         }
 
         $this->redirect( $redirectUrl );
+        exit;
     }
 
     public function getGatewayParams()

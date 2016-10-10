@@ -24,6 +24,8 @@ class Omnipay_PaymentController extends Payment
         $gateway = $this->getModule()->getGateway();
 
         if(!$gateway->supportsPurchase()) {
+
+            \Pimcore\Logger::error("OmniPay Gateway payment [" . $this->getModule()->getName() . "] does not support purchase");
             throw new \CoreShop\Exception("Gateway doesn't support purchase!");
         }
 
@@ -35,28 +37,35 @@ class Omnipay_PaymentController extends Payment
 
             if($response->getTransactionReference()) {
                 $this->cart->setCustomIdentifier($response->getTransactionReference());
-            }
-            else {
+            } else {
                 $this->cart->setCustomIdentifier($params['transactionId']);
             }
+
             $this->cart->save();
 
-            if($response->isSuccessful()) {
-                $this->redirect($params['returnUrl']);
-            }
-            else if($response->isRedirect()) {
-                if($response instanceof \Omnipay\Common\Message\RedirectResponseInterface) {
-                    if ($response->getRedirectMethod() === "GET")
-                        $this->redirect($response->getRedirectUrl());
-                    else {
-                        $this->view->response = $response;
-                        $this->_helper->viewRenderer('payment/post', null, true);
+            try {
+
+                if($response->isSuccessful()) {
+                    \Pimcore\Logger::notice("OmniPay Gateway payment [" . $this->getModule()->getName() . "]: Gateway successfully responded redirect!");
+                    $this->redirect($params['returnUrl']);
+                } else if($response->isRedirect()) {
+                    if($response instanceof \Omnipay\Common\Message\RedirectResponseInterface) {
+                        \Pimcore\Logger::notice("OmniPay Gateway payment [" . $this->getModule()->getName() . "]: response is a redirect. RedirectMethod: " . $response->getRedirectMethod() );
+                        if ($response->getRedirectMethod() === "GET")
+                            $this->redirect($response->getRedirectUrl());
+                        else {
+                            $this->view->response = $response;
+                            $this->_helper->viewRenderer('payment/post', null, true);
+                        }
                     }
+                } else {
+                    throw new \CoreShop\Exception($response->getMessage());
                 }
+
+            } catch(\Exception $e) {
+                \Pimcore\Logger::error("OmniPay Gateway payment [" . $this->getModule()->getName() . "] Error: " . $e->getMessage());
             }
-            else {
-                throw new \CoreShop\Exception("Sorry, your request failed");
-            }
+
         }
     }
 
