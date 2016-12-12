@@ -18,10 +18,7 @@ use CoreShop\Model\Cart;
 use CoreShop\Model\Order;
 use CoreShop\Model\Plugin\Payment as CorePayment;
 use CoreShop\Plugin as CorePlugin;
-use CoreShop\Tool;
 use Omnipay\Common\AbstractGateway;
-use Omnipay\Shop\Install;
-use Pimcore\Model\Staticroute;
 
 /**
  * Class Shop
