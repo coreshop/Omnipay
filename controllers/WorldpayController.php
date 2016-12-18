@@ -22,14 +22,19 @@ class Omnipay_WorldpayController extends Omnipay_PaymentController
     public function paymentReturnAction()
     {
         $transaction = $_REQUEST['reference'];
+        $orderId = str_replace('order_', '', $transaction );
+
         $status = $_REQUEST['transStatus'];
 
         if($status === 'Y') {
             if ($transaction) {
-                $cart = \CoreShop\Model\Cart::findByCustomIdentifier($transaction);
+                $order = \CoreShop\Model\Order::getById( $orderId );
 
-                if ($cart instanceof \CoreShop\Model\Cart) {
-                    $order = $cart->createOrder(\CoreShop\Model\Order\State::getById(\CoreShop\Model\Configuration::get("SYSTEM.ORDERSTATE.PAYMENT")), $this->getModule(), $this->cart->getTotal(), $this->view->language);
+                if ($order instanceof \CoreShop\Model\Order) {
+
+                    /** @var $state \CoreShop\Model\Order\State $state */
+                    $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( 'PAYMENT' ) );
+                    $state->processStep($order);
 
                     $payments = $order->getPayments();
 

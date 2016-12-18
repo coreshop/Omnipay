@@ -25,8 +25,23 @@ class Omnipay_PaymentController extends Payment
 
         if(!$gateway->supportsPurchase()) {
 
-            \Pimcore\Logger::error("OmniPay Gateway payment [" . $this->getModule()->getName() . "] does not support purchase");
-            throw new \CoreShop\Exception("Gateway doesn't support purchase!");
+            $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . '] does not support purchase';
+            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( $message );
+
+            \Pimcore\Logger::error($message);
+            $this->redirect( $redirectUrl );
+        }
+
+        //create or get order
+        if( !$this->session->order instanceof \CoreShop\Model\Order) {
+
+            $this->session->order = $this->cart->createOrder(
+                \CoreShop\Model\Order\State::getByIdentifier('PAYMENT_PENDING'),
+                $this->getModule(),
+                $this->cart->getTotal(),
+                $this->view->language
+            );
+
         }
 
         $params = $this->getGatewayParams();
@@ -59,11 +74,23 @@ class Omnipay_PaymentController extends Payment
                         }
                     }
                 } else {
-                    throw new \CoreShop\Exception($response->getMessage());
+
+                    $logMessage = "OmniPay Gateway payment [" . $this->getModule()->getName() . "] Error: " . $response->getMessage();
+                    $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( $response->getMessage() );
+
+                    \Pimcore\Logger::error($logMessage);
+                    $this->redirect( $redirectUrl );
+
                 }
 
             } catch(\Exception $e) {
-                \Pimcore\Logger::error("OmniPay Gateway payment [" . $this->getModule()->getName() . "] Error: " . $e->getMessage());
+
+                $logMessage = "OmniPay Gateway payment [" . $this->getModule()->getName() . "] Error: " . $e->getMessage();
+                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( $e->getMessage() );
+
+                \Pimcore\Logger::error($logMessage);
+                $this->redirect( $redirectUrl );
+
             }
 
         }
@@ -116,12 +143,15 @@ class Omnipay_PaymentController extends Payment
     {
         $cardParams = $this->getParam("card", []);
 
+        /** @var \CoreShop\Model\Order $order */
+        $order = $this->session->order;
+
         $params = $this->getAllParams();
         $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return");
         $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return-abort");
-        $params['amount'] = $this->cart->getTotal();
-        $params['currency'] = \Coreshop::getTools()->getCurrency()->getIsoCode();
-        $params['transactionId'] = uniqid();
+        $params['amount'] = $order->getTotal();
+        $params['currency'] = $order->getCurrency()->getIsoCode();
+        $params['transactionId'] = 'order_' . $order->getId();
 
         if(count($cardParams) > 0) {
             $params['card'] = new \Omnipay\Common\CreditCard($cardParams);
