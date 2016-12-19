@@ -32,19 +32,29 @@ class Omnipay_PaymentController extends Payment
             $this->redirect( $redirectUrl );
         }
 
-        //create or get order
-        if( !$this->session->order instanceof \CoreShop\Model\Order) {
+        //create order
+        $order = NULL;
 
-            $this->session->order = $this->cart->createOrder(
+        try {
+
+            $order = $this->cart->createOrder(
                 \CoreShop\Model\Order\State::getByIdentifier('PAYMENT_PENDING'),
                 $this->getModule(),
                 $this->cart->getTotal(),
                 $this->view->language
             );
 
+        } catch( \Exception $e ) {
+
+            $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on Order creation. Messaeg: ' . $e->getMessage();
+            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( $message );
+
+            \Pimcore\Logger::error($message);
+            $this->redirect( $redirectUrl );
+
         }
 
-        $params = $this->getGatewayParams();
+        $params = $this->getGatewayParams($order);
 
         $response = $gateway->purchase($params)->send();
 
@@ -134,21 +144,20 @@ class Omnipay_PaymentController extends Payment
     }
 
     /**
+     * @param \CoreShop\Model\Order $order
+     *
      * Get all required Params for gateway.
      * extend this in your custom omnipay controller.
      *
      * @return array
      */
-    public function getGatewayParams()
+    public function getGatewayParams( $order )
     {
-        $cardParams = $this->getParam("card", []);
-
-        /** @var \CoreShop\Model\Order $order */
-        $order = $this->session->order;
+        $cardParams = $this->getParam('card', []);
 
         $params = $this->getAllParams();
-        $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return");
-        $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), "payment-return-abort");
+        $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), 'payment-return');
+        $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), 'payment-return-abort');
         $params['amount'] = $order->getTotal();
         $params['currency'] = $order->getCurrency()->getIsoCode();
         $params['transactionId'] = 'order_' . $order->getId();

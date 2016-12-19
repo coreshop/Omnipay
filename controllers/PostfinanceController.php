@@ -39,7 +39,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
             if ($order instanceof \CoreShop\Model\Order) {
 
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: create order with: ' . $requestData['transaction']);
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
 
                 /** @var $state \CoreShop\Model\Order\State $state */
                 $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
@@ -84,7 +84,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
             if ($order instanceof \CoreShop\Model\Order) {
 
-                \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: order with: ' . $requestData['transaction']);
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
 
                 /** @var $state \CoreShop\Model\Order\State $state */
                 $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
@@ -118,9 +118,60 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         exit;
     }
 
-    public function getGatewayParams()
+    public function paymentReturnAbortAction()
     {
-        $params = parent::getGatewayParams();
+        $requestData = $this->parseRequestData();
+
+        if (!empty( $requestData['transaction'] )) {
+
+            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
+
+            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+
+            if ($order instanceof \CoreShop\Model\Order) {
+
+                /** @var $state \CoreShop\Model\Order\State $state */
+                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state->processStep($order);
+
+            }
+
+        }
+
+        $this->coreShopForward("canceled", "checkout", "CoreShop", []);
+    }
+
+    public function errorAction()
+    {
+        $requestData = $this->parseRequestData();
+
+        if (!empty( $requestData['transaction'] )) {
+
+            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
+
+            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+
+            if ($order instanceof \CoreShop\Model\Order) {
+
+                /** @var $state \CoreShop\Model\Order\State $state */
+                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state->processStep($order);
+
+            }
+
+        }
+
+        $this->coreShopForward("error", "checkout", "CoreShop", []);
+    }
+
+    /**
+     * @param \CoreShop\Model\Order $order
+     *
+     * @return array
+     */
+    public function getGatewayParams($order)
+    {
+        $params = parent::getGatewayParams($order);
 
         $language = $this->language;
         $gatewayLanguage = 'en_EN';
@@ -194,12 +245,20 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
         switch( $code )
         {
+            //1
+            case Helper::POSTFINANCE_PAYMENT_CANCELED_BY_CUSTOMER:
+                $state = 'CANCELED';
+                break;
+
+            //9
             case Helper::POSTFINANCE_PAYMENT_REQUESTED:
                 $state = 'PAYMENT';
                 break;
             case Helper::POSTFINANCE_PAYMENT_PROCESSING:
                 $state = 'PAYMENT';
                 break;
+
+            //5
             case Helper::POSTFINANCE_AUTHORIZED:
                 $state = 'PAYMENT_PENDING';
                 break;
