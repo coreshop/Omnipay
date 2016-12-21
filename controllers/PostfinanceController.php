@@ -54,9 +54,8 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
                 try {
                     \CoreShop\Model\Order\State::changeOrderState($order, $params);
-                    $this->redirect($this->getModule()->getConfirmationUrl($order));
                 } catch(\Exception $e) {
-                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                    \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. changeOrderState Error: ' . $e->getMessage());
                 }
 
                 $payments = $order->getPayments();
