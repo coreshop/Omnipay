@@ -32,9 +32,26 @@ class Omnipay_WorldpayController extends Omnipay_PaymentController
 
                 if ($order instanceof \CoreShop\Model\Order) {
 
-                    /** @var $state \CoreShop\Model\Order\State $state */
-                    $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( 'PAYMENT' ) );
-                    $state->processStep($order);
+                    try {
+
+                        $params = [
+
+                            'newState'      => \CoreShop\Model\Order\State::STATE_PROCESSING,
+                            'newStatus'     => \CoreShop\Model\Order\State::STATUS_PROCESSING,
+                            'additional'    => [
+                                'sendOrderConfirmationMail' => FALSE,
+                                'sendOrderStatusMail'       => FALSE,
+                            ]
+
+                        ];
+
+                        \CoreShop\Model\Order\State::changeOrderState($order, $params);
+
+                    } catch(\Exception $e) {
+                        $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on OrderChange: ' . $e->getMessage();
+                        \Pimcore\Logger::error($message);
+                        $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                    }
 
                     $payments = $order->getPayments();
 

@@ -38,15 +38,36 @@ class Omnipay_PaymentController extends Payment
 
             $order = $this->createOrder($this->view->language);
 
-        } catch(\Exception $e) {
+            try {
 
-            $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on Order creation. Messaeg: ' . $e->getMessage();
+                $params = [
+
+                    'newState'      => \CoreShop\Model\Order\State::STATE_PENDING_PAYMENT,
+                    'newStatus'     => \CoreShop\Model\Order\State::STATUS_PENDING_PAYMENT,
+                    'additional'    => [
+                        'sendOrderConfirmationMail' => FALSE,
+                        'sendOrderStatusMail'       => FALSE,
+                    ]
+
+                ];
+
+                \CoreShop\Model\Order\State::changeOrderState($order, $params);
+
+            } catch(\Exception $e) {
+                $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on OrderChange: ' . $e->getMessage();
+                \Pimcore\Logger::error($message);
+                $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+            }
+
+        } catch(\Exception $e )
+        {
+            $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on Order creation. Message: ' . $e->getMessage();
             $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl($message);
 
             \Pimcore\Logger::error($message);
             $this->redirect($redirectUrl);
-
         }
+
 
         $params = $this->getGatewayParams($order);
 

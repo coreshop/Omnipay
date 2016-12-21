@@ -34,7 +34,7 @@ class Shop
     {
         self::getInstall()->attachEvents();
 
-        $activeProviders = Configuration::get("OMNIPAY.ACTIVEPROVIDERS");
+        $activeProviders = Configuration::get('OMNIPAY.ACTIVEPROVIDERS');
 
         if(!is_array($activeProviders)) {
             $activeProviders = [];
@@ -42,7 +42,7 @@ class Shop
 
         foreach($activeProviders as $provider) {
             $gateway = \Omnipay\Omnipay::getFactory()->create($provider);
-            $config = Configuration::get("OMNIPAY." . strtoupper($provider));
+            $config = Configuration::get('OMNIPAY.' . strtoupper($provider));
 
             if(is_null($config)) {
                 $config = [];
@@ -50,7 +50,7 @@ class Shop
 
             $shopProvider = new Provider($gateway, $config);
 
-            \Pimcore::getEventManager()->attach("coreshop.payment.getProvider", function ($e) use ($shopProvider) {
+            \Pimcore::getEventManager()->attach('coreshop.payment.getProvider', function ($e) use ($shopProvider) {
                 return $shopProvider;
             });
         }

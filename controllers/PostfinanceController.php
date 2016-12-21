@@ -15,6 +15,7 @@
 require 'PaymentController.php';
 
 use Omnipay\Postfinance\Message\Helper;
+use CoreShop\Model\Order\State;
 
 /**
  * Class Omnipay_PostfinanceController
@@ -22,7 +23,7 @@ use Omnipay\Postfinance\Message\Helper;
 class Omnipay_PostfinanceController extends Omnipay_PaymentController
 {
     /**
-     * This Action listen to server2server communication
+     * This Action listens to server2server communication
      */
     public function paymentReturnServerAction()
     {
@@ -37,11 +38,26 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
+                $state = $this->getState($requestData['status']);
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Change order state to: ' . $state['state']);
 
-                /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
-                $state->processStep($order);
+                $params = [
+
+                    'newState'      => $state['state'],
+                    'newStatus'     => $state['status'],
+                    'additional'    => [
+                        'sendOrderConfirmationMail' => $state['sendOrderConfirmationMail'],
+                        'sendOrderStatusMail'       => $state['sendOrderStatusMail'],
+                    ]
+
+                ];
+
+                try {
+                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
+                    $this->redirect($this->getModule()->getConfirmationUrl($order));
+                } catch(\Exception $e) {
+                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                }
 
                 $payments = $order->getPayments();
 
@@ -52,11 +68,11 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
                 }
 
             } else {
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: Order with identifier' . $requestData['transaction'] . 'not found');
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Order with identifier' . $requestData['transaction'] . 'not found');
             }
         } else {
 
-            \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: No valid transaction id given');
+            \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. No valid transaction id given');
         }
 
         exit;
@@ -80,11 +96,26 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
+                $state = $this->getState($requestData['status']);
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Change order state to: ' . $state['state']);
 
-                /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
-                $state->processStep($order);
+                $params = [
+
+                    'newState'      => $state['state'],
+                    'newStatus'     => $state['status'],
+                    'additional'    => [
+                        'sendOrderConfirmationMail' => $state['sendOrderConfirmationMail'],
+                        'sendOrderStatusMail'       => $state['sendOrderStatusMail'],
+                    ]
+
+                ];
+
+                try {
+                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
+                    $this->redirect($this->getModule()->getConfirmationUrl($order));
+                } catch(\Exception $e) {
+                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                }
 
                 $payments = $order->getPayments();
 
@@ -115,14 +146,29 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         $requestData = $this->parseRequestData();
 
         if (!empty($requestData['transaction'])) {
-            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
+            $state = $this->getState($requestData['status']);
+            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]. Change order state to: ' . $state['state']);
 
             $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-                /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
-                $state->processStep($order);
+                $params = [
+
+                    'newState'      => $state['state'],
+                    'newStatus'     => $state['status'],
+                    'additional'    => [
+                        'notes' => '',
+                        'sendOrderConfirmationMail' => $state['sendOrderConfirmationMail'],
+                        'sendOrderStatusMail'       => $state['sendOrderStatusMail'],
+                    ]
+                ];
+
+                try {
+                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
+                    $this->redirect($this->getModule()->getConfirmationUrl($order));
+                } catch(\Exception $e) {
+                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                }
             }
 
         }
@@ -135,14 +181,30 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         $requestData = $this->parseRequestData();
 
         if (!empty($requestData['transaction'])) {
-            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
+            $state = $this->getState($requestData['status']);
+            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]. Change order state to: ' . $state['state']);
 
             $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-                /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
-                $state->processStep($order);
+
+                $params = [
+
+                    'newState'      => $state['state'],
+                    'newStatus'     => $state['status'],
+                    'additional'    => [
+                        'sendOrderConfirmationMail' => $state['sendOrderConfirmationMail'],
+                        'sendOrderStatusMail'       => $state['sendOrderStatusMail'],
+                    ]
+
+                ];
+
+                try {
+                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
+                    $this->redirect($this->getModule()->getConfirmationUrl($order));
+                } catch(\Exception $e) {
+                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
+                }
             }
         }
 
@@ -223,34 +285,51 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         ];
     }
 
-    private function getStateId($code)
+    private function getState($code)
     {
-        $state = 'ERROR';
+        $state = State::STATE_CANCELED;
+        $status = State::STATUS_CANCELED;
+        $sendOrderConfirmationMail = FALSE;
+        $sendOrderStatusMail = FALSE;
 
         switch($code)
         {
             //1
             case Helper::POSTFINANCE_PAYMENT_CANCELED_BY_CUSTOMER:
-                $state = 'CANCELED';
-                break;
-
-            //9
-            case Helper::POSTFINANCE_PAYMENT_REQUESTED:
-                $state = 'PAYMENT';
-                break;
-            case Helper::POSTFINANCE_PAYMENT_PROCESSING:
-                $state = 'PAYMENT';
+                $state = State::STATE_CANCELED;
+                $status = State::STATE_CANCELED;
+                $sendOrderConfirmationMail = FALSE;
+                $sendOrderStatusMail = FALSE;
                 break;
 
             //5
             case Helper::POSTFINANCE_AUTHORIZED:
-                $state = 'PAYMENT_PENDING';
+                $state = State::STATE_PENDING_PAYMENT;
+                $status = State::STATUS_PENDING_PAYMENT;
                 break;
             case Helper::POSTFINANCE_AUTHORIZED_WAITING:
-                $state = 'PAYMENT_PENDING';
+                $state = State::STATE_PENDING_PAYMENT;
+                $status = State::STATUS_PENDING_PAYMENT;
+                $sendOrderConfirmationMail = FALSE;
+                $sendOrderStatusMail = FALSE;
                 break;
+
+            //9
+            case Helper::POSTFINANCE_PAYMENT_REQUESTED:
+                $state =  State::STATE_PROCESSING;
+                $status = State::STATUS_PROCESSING;
+                $sendOrderConfirmationMail = TRUE;
+                $sendOrderStatusMail = FALSE;
+                break;
+            case Helper::POSTFINANCE_PAYMENT_PROCESSING:
+                $state =  State::STATE_PROCESSING;
+                $status = State::STATUS_PROCESSING;
+                $sendOrderConfirmationMail = TRUE;
+                $sendOrderStatusMail = FALSE;
+                break;
+
         }
 
-        return $state;
+        return ['state' => $state, 'status' => $status, 'sendOrderConfirmationMail' => $sendOrderConfirmationMail, 'sendOrderStatusMail' => $sendOrderStatusMail];
     }
 }
