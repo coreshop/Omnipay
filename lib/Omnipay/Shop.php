@@ -14,12 +14,8 @@
 
 namespace Omnipay;
 
-use CoreShop\Model\Cart;
 use CoreShop\Model\Configuration;
-use CoreShop\Model\Order;
-use CoreShop\Model\Plugin\Payment as CorePayment;
 use CoreShop\Plugin as CorePlugin;
-use CoreShop\Tool;
 use Omnipay\Shop\Install;
 use Omnipay\Shop\Provider;
 
