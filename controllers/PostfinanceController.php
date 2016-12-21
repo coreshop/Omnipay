@@ -12,7 +12,7 @@
  * @license    https://www.coreshop.org/license     GNU General Public License version 3 (GPLv3)
  */
 
-require "PaymentController.php";
+require 'PaymentController.php';
 
 use Omnipay\Postfinance\Message\Helper;
 
@@ -33,23 +33,21 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
         \Pimcore\Logger::log('OmniPay paymentReturnServer [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
 
-        if (!empty( $requestData['transaction'] )) {
-
-            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+        if (!empty($requestData['transaction'])) {
+            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
 
                 /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
                 $state->processStep($order);
 
                 $payments = $order->getPayments();
 
                 foreach ($payments as $p) {
                     $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
-                    $dataBrick->setTransactionId( $requestData['transaction'] );
+                    $dataBrick->setTransactionId($requestData['transaction']);
                     $p->save();
                 }
 
@@ -78,43 +76,37 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
         \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
 
-        if (!empty( $requestData['transaction'] )) {
-
-            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+        if (!empty($requestData['transaction'])) {
+            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
+                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
 
                 /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
                 $state->processStep($order);
 
                 $payments = $order->getPayments();
 
                 foreach ($payments as $p) {
                     $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
-                    $dataBrick->setTransactionId( $requestData['transaction'] );
+                    $dataBrick->setTransactionId($requestData['transaction']);
                     $p->save();
                 }
 
                 $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
 
             } else {
-
                 \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: Order with identifier' . $requestData['transaction'] . 'not found');
-                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'order with identifier' . $requestData['transaction'] . 'not found' );
-
+                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl('order with identifier' . $requestData['transaction'] . 'not found');
             }
 
         } else {
-
             \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: No valid transaction id given');
-            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl( 'no valid transaction id given' );
-
+            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl('no valid transaction id given');
         }
 
-        $this->redirect( $redirectUrl );
+        $this->redirect($redirectUrl);
         exit;
     }
 
@@ -122,46 +114,39 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
     {
         $requestData = $this->parseRequestData();
 
-        if (!empty( $requestData['transaction'] )) {
+        if (!empty($requestData['transaction'])) {
+            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
 
-            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
-
-            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-
                 /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
                 $state->processStep($order);
-
             }
 
         }
 
-        $this->coreShopForward("canceled", "checkout", "CoreShop", []);
+        $this->coreShopForward('canceled', 'checkout', 'CoreShop', []);
     }
 
     public function errorAction()
     {
         $requestData = $this->parseRequestData();
 
-        if (!empty( $requestData['transaction'] )) {
+        if (!empty($requestData['transaction'])) {
+            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]: change order state to: ' . $this->getStateId($requestData['status']));
 
-            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]: change order state to: ' . $this->getStateId( $requestData['status'] ) );
-
-            $order = \CoreShop\Model\Order::getById( $requestData['orderId'] );
+            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
             if ($order instanceof \CoreShop\Model\Order) {
-
                 /** @var $state \CoreShop\Model\Order\State $state */
-                $state = \CoreShop\Model\Order\State::getByIdentifier( $this->getStateId( $requestData['status'] ) );
+                $state = \CoreShop\Model\Order\State::getByIdentifier($this->getStateId($requestData['status']));
                 $state->processStep($order);
-
             }
-
         }
 
-        $this->coreShopForward("error", "checkout", "CoreShop", []);
+        $this->coreShopForward('error', 'checkout', 'CoreShop', []);
     }
 
     /**
@@ -176,9 +161,8 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         $language = $this->language;
         $gatewayLanguage = 'en_EN';
 
-        if( !empty( $language ) )
-        {
-            $gatewayLanguage = $language . '_' . strtoupper( $language );
+        if(!empty($language)) {
+            $gatewayLanguage = $language . '_' . strtoupper($language);
         }
 
         $params['language'] = $gatewayLanguage;
@@ -198,7 +182,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         /**
          * CoreShop Order Id
          */
-        $orderId = str_replace('order_', '', $transaction );
+        $orderId = str_replace('order_', '', $transaction);
 
         /**
          * @var $status
@@ -243,7 +227,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
     {
         $state = 'ERROR';
 
-        switch( $code )
+        switch($code)
         {
             //1
             case Helper::POSTFINANCE_PAYMENT_CANCELED_BY_CUSTOMER:
