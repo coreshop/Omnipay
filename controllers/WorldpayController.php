@@ -36,7 +36,11 @@ class Omnipay_WorldpayController extends Omnipay_PaymentController
                     $this->getOrderPayment(
                         $order,
                         $_REQUEST['transId']
-                    )->addTransactionNote($_REQUEST['transId'], $status);
+                    )->addTransactionNote(
+                        $_REQUEST['transId'],
+                        $status,
+                        'transStatus: ' . $status
+                    );
 
                     try {
                         $params = [
@@ -45,20 +49,27 @@ class Omnipay_WorldpayController extends Omnipay_PaymentController
                         ];
                         \CoreShop\Model\Order\State::changeOrderState($order, $params);
 
+                        try {
+                            $order->createInvoiceForAllItems();
+                        } catch(\Exception $e) {
+                            // fail silently.
+                        }
+
                     } catch(\Exception $e) {
                         $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on OrderChange: ' . $e->getMessage();
                         \Pimcore\Logger::error($message);
                         $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
                     }
 
+                    /* @fixme
                     $payments = $order->getPayments();
-
                     foreach ($payments as $p) {
                         $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
                         $dataBrick->setTransactionId($transaction);
 
                         $p->save();
                     }
+                    */
 
                     $this->view->redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
                 } else {

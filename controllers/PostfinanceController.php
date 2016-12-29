@@ -145,8 +145,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             }
         }
 
-        //@fixme!
-        /*
+        /* @fixme!
         $payments = $order->getPayments();
         foreach ($payments as $p) {
             $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
