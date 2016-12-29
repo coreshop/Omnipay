@@ -28,55 +28,13 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
      */
     public function paymentReturnServerAction()
     {
-        $requestData = $this->parseRequestData();
-
         $this->disableLayout();
         $this->disableViewAutoRender();
 
-        \Pimcore\Logger::log('OmniPay paymentReturnServer [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
-
-        if (!empty($requestData['transaction'])) {
-            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
-
-            if ($order instanceof \CoreShop\Model\Order) {
-
-                //get transaction
-                $this->getOrderPayment(
-                    $order,
-                    $requestData['payId']
-                )->addTransactionNote($requestData['payId'], TransactionInfo::getStatusTranslation($requestData['status'], true));
-
-                //set state
-                $state = $this->getState($requestData['status']);
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Change order (' . $order->getId() . ') state to: ' . $state['state']);
-
-                $params = [
-                    'newState'      => $state['state'],
-                    'newStatus'     => $state['status'],
-                ];
-
-                try {
-                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
-                } catch(\Exception $e) {
-                    \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. changeOrderState Error: ' . $e->getMessage());
-                }
-
-                //@fixme!
-                /*
-                $payments = $order->getPayments();
-                foreach ($payments as $p) {
-                    $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
-                    $dataBrick->setTransactionId($requestData['transaction']);
-                    $p->save();
-                }
-                */
-
-            } else {
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Order with identifier ' . $requestData['transaction'] . ' not found');
-            }
-        } else {
-
-            \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. No valid transaction id given');
+        try {
+            $order = $this->_processRequest();
+        } catch(\Exception $e) {
+            \Pimcore\Logger::notice($e->getMessage());
         }
 
         exit;
@@ -89,132 +47,116 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
      */
     public function paymentReturnAction()
     {
-        $requestData = $this->parseRequestData();
-
         $this->disableLayout();
         $this->disableViewAutoRender();
 
-        \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]. TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
-
-        if (!empty($requestData['transaction'])) {
-            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
-
-            if ($order instanceof \CoreShop\Model\Order) {
-
-                //get transaction
-                $this->getOrderPayment(
-                    $order,
-                    $requestData['payId']
-                )->addTransactionNote($requestData['payId'], TransactionInfo::getStatusTranslation($requestData['status'], true));
-
-                $state = $this->getState($requestData['status']);
-                \Pimcore\Logger::notice('OmniPay paymentReturnServer [Postfinance]. Change order state to: ' . $state['state']);
-
-                $params = [
-                    'newState'      => $state['state'],
-                    'newStatus'     => $state['status'],
-                ];
-
-                try {
-                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
-                    $this->redirect($this->getModule()->getConfirmationUrl($order));
-                } catch(\Exception $e) {
-                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
-                }
-
-                //@fixme!
-                /*
-                $payments = $order->getPayments();
-                foreach ($payments as $p) {
-                    $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
-                    $dataBrick->setTransactionId($requestData['transaction']);
-                    $p->save();
-                }
-                */
-
-                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getConfirmationUrl($order);
-
-            } else {
-                \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: Order with identifier ' . $requestData['transaction'] . ' not found');
-                $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl('order with identifier ' . $requestData['transaction'] . ' not found');
-            }
-        } else {
-            \Pimcore\Logger::notice('OmniPay paymentReturn [Postfinance]: No valid transaction id given');
-            $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl('no valid transaction id given');
+        try {
+            $order = $this->_processRequest();
+            $this->redirect($this->getModule()->getConfirmationUrl($order));
+        } catch(\Exception $e) {
+            \Pimcore\Logger::notice($e->getMessage());
+            $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
         }
 
-        $this->redirect($redirectUrl);
         exit;
     }
 
     public function paymentReturnAbortAction()
     {
-        $requestData = $this->parseRequestData();
+        $this->disableLayout();
+        $this->disableViewAutoRender();
 
-        if (!empty($requestData['transaction'])) {
-            $state = $this->getState($requestData['status']);
-            \Pimcore\Logger::notice('OmniPay paymentReturnAbortAction [Postfinance]. Change order state to: ' . $state['state']);
-
-            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
-
-            if ($order instanceof \CoreShop\Model\Order) {
-
-                //get transaction
-                $this->getOrderPayment(
-                    $order,
-                    $requestData['payId']
-                )->addTransactionNote($requestData['payId'], TransactionInfo::getStatusTranslation($requestData['status'], true));
-
-                $params = [
-                    'newState'      => $state['state'],
-                    'newStatus'     => $state['status']
-                ];
-
-                try {
-                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
-                    $this->redirect($this->getModule()->getConfirmationUrl($order));
-                } catch(\Exception $e) {
-                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
-                }
-            }
+        try {
+            $order = $this->_processRequest();
+            $this->coreShopForward('canceled', 'checkout', 'CoreShop', []);
+        } catch(\Exception $e) {
+            \Pimcore\Logger::notice($e->getMessage());
+            $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
         }
-
-        $this->coreShopForward('canceled', 'checkout', 'CoreShop', []);
     }
 
     public function errorAction()
     {
+        $this->disableLayout();
+        $this->disableViewAutoRender();
+        $this->coreShopForward('error', 'checkout', 'CoreShop', []);
+    }
+
+    private function _processRequest()
+    {
         $requestData = $this->parseRequestData();
 
-        if (!empty($requestData['transaction'])) {
-            $state = $this->getState($requestData['status']);
-            \Pimcore\Logger::notice('OmniPay errorAction [Postfinance]. Change order state to: ' . $state['state']);
+        \Pimcore\Logger::notice('OmniPay [Postfinance]: TransactionID: ' . $requestData['transaction'] . ', Status: ' . $requestData['status']);
 
-            $order = \CoreShop\Model\Order::getById($requestData['orderId']);
+        if (empty($requestData['transaction'])) {
+            throw new \Exception('OmniPay [Postfinance]: No valid transaction id given');
+        }
 
-            if ($order instanceof \CoreShop\Model\Order) {
+        $order = \CoreShop\Model\Order::getById($requestData['orderId']);
 
-                //get transaction
-                $this->getOrderPayment(
-                    $order,
-                    $requestData['payId']
-                )->addTransactionNote($requestData['payId'], TransactionInfo::getStatusTranslation($requestData['status'], true));
+        if (!$order instanceof \CoreShop\Model\Order) {
+            throw new \Exception('OmniPay [Postfinance]: Order with identifier ' . $requestData['transaction'] . ' not found');
+        }
 
-                $params = [
-                    'newState'      => $state['state'],
-                    'newStatus'     => $state['status']
-                ];
+        //get transaction
+        $orderPayment = $this->getOrderPayment(
+            $order,
+            $requestData['payId']
+        );
 
-                try {
-                    \CoreShop\Model\Order\State::changeOrderState($order, $params);
-                    $this->redirect($this->getModule()->getConfirmationUrl($order));
-                } catch(\Exception $e) {
-                    $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
-                }
+        //check if this payment transaction already has been dispatched
+        $latestTransaction = $orderPayment->getLastTransactionNote();
+
+        if ($latestTransaction instanceof \Pimcore\Model\Element\Note) {
+            $data = $latestTransaction->data;
+            if (isset($data['code']) && (int) $data['code']['data'] === $requestData['status']) {
+                throw new \Exception('OmniPay [Postfinance]: State (' . $requestData['status'] . ') already has been processed.');
             }
         }
 
-        $this->coreShopForward('error', 'checkout', 'CoreShop', []);
+        $orderPayment->addTransactionNote(
+            $requestData['payId'],
+            $requestData['status'],
+            TransactionInfo::getStatusTranslation($requestData['status'], true)
+        );
+
+        //get right state
+        $state = $this->getState($requestData['status']);
+        \Pimcore\Logger::notice('OmniPay [Postfinance]: Change order state to: ' . $state['state']);
+
+        $params = [
+            'newState'      => $state['state'],
+            'newStatus'     => $state['status'],
+        ];
+
+        try {
+            \CoreShop\Model\Order\State::changeOrderState($order, $params);
+        } catch(\Exception $e) {
+            // fail silently.
+            \Pimcore\Logger::notice('OmniPay [Postfinance]: changeOrderState Error: ' . $e->getMessage());
+        }
+
+        //if state has ability to create invoice, do it now!
+        if ($state['invoicingPossible'] === TRUE) {
+            try {
+                $order->createInvoiceForAllItems();
+            } catch(\Exception $e) {
+                // fail silently.
+            }
+        }
+
+        //@fixme!
+        /*
+        $payments = $order->getPayments();
+        foreach ($payments as $p) {
+            $dataBrick = new \Pimcore\Model\Object\Objectbrick\Data\CoreShopPaymentOmnipay($p);
+            $dataBrick->setTransactionId($requestData['transaction']);
+            $p->save();
+        }
+        */
+
+        return $order;
+
     }
 
     /**
@@ -295,7 +237,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
     {
         $state = State::STATE_CANCELED;
         $status = State::STATUS_CANCELED;
-        $fixInvoice = false;
+        $invoicingPossible = false;
 
         switch($code)
         {
@@ -333,11 +275,11 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             case Helper::POSTFINANCE_PAYMENT_UNCERTAIN:
                 $state =  State::STATE_PROCESSING;
                 $status = State::STATUS_PROCESSING;
-                $fixInvoice = true;
+                $invoicingPossible = true;
                 break;
 
         }
 
-        return ['state' => $state, 'status' => $status, 'fixInvoice' => $fixInvoice];
+        return ['state' => $state, 'status' => $status, 'invoicingPossible' => $invoicingPossible];
     }
 }
