@@ -32,19 +32,17 @@ class Omnipay_WorldpayController extends Omnipay_PaymentController
 
                 if ($order instanceof \CoreShop\Model\Order) {
 
+                    //get transaction
+                    $this->getOrderPayment(
+                        $order,
+                        $_REQUEST['transId']
+                    )->addTransactionNote($_REQUEST['transId'], $status);
+
                     try {
-
                         $params = [
-
                             'newState'      => \CoreShop\Model\Order\State::STATE_PROCESSING,
                             'newStatus'     => \CoreShop\Model\Order\State::STATUS_PROCESSING,
-                            'additional'    => [
-                                'sendOrderConfirmationMail' => FALSE,
-                                'sendOrderStatusMail'       => FALSE,
-                            ]
-
                         ];
-
                         \CoreShop\Model\Order\State::changeOrderState($order, $params);
 
                     } catch(\Exception $e) {

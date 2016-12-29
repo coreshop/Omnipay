@@ -35,22 +35,13 @@ class Omnipay_PaymentController extends Payment
         $order = NULL;
 
         try {
-
             $order = $this->createOrder($this->view->language);
 
             try {
-
                 $params = [
-
                     'newState'      => \CoreShop\Model\Order\State::STATE_PENDING_PAYMENT,
                     'newStatus'     => \CoreShop\Model\Order\State::STATUS_PENDING_PAYMENT,
-                    'additional'    => [
-                        'sendOrderConfirmationMail' => FALSE,
-                        'sendOrderStatusMail'       => FALSE,
-                    ]
-
                 ];
-
                 \CoreShop\Model\Order\State::changeOrderState($order, $params);
 
             } catch(\Exception $e) {
@@ -59,8 +50,7 @@ class Omnipay_PaymentController extends Payment
                 $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));
             }
 
-        } catch(\Exception $e )
-        {
+        } catch(\Exception $e ) {
             $message = 'OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Error on Order creation. Message: ' . $e->getMessage();
             $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl($message);
 
@@ -68,23 +58,11 @@ class Omnipay_PaymentController extends Payment
             $this->redirect($redirectUrl);
         }
 
-
         $params = $this->getGatewayParams($order);
-
         $response = $gateway->purchase($params)->send();
 
         if($response instanceof \Omnipay\Common\Message\ResponseInterface) {
-
-            if($response->getTransactionReference()) {
-                $this->cart->setCustomIdentifier($response->getTransactionReference());
-            } else {
-                $this->cart->setCustomIdentifier($params['transactionId']);
-            }
-
-            $this->cart->save();
-
             try {
-
                 if($response->isSuccessful()) {
                     \Pimcore\Logger::notice('OmniPay Gateway payment [' . $this->getModule()->getName() . ']: Gateway successfully responded redirect!');
                     $this->redirect($params['returnUrl']);
@@ -99,25 +77,19 @@ class Omnipay_PaymentController extends Payment
                         }
                     }
                 } else {
-
                     $logMessage = 'OmniPay Gateway payment [' . $this->getModule()->getName() . '] Error: ' . $response->getMessage();
                     $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl($response->getMessage());
 
                     \Pimcore\Logger::error($logMessage);
                     $this->redirect($redirectUrl);
-
                 }
-
             } catch(\Exception $e) {
-
                 $logMessage = 'OmniPay Gateway payment [' . $this->getModule()->getName() . '] Error: ' . $e->getMessage();
                 $redirectUrl = Pimcore\Tool::getHostUrl() . $this->getModule()->getErrorUrl($e->getMessage());
 
                 \Pimcore\Logger::error($logMessage);
                 $this->redirect($redirectUrl);
-
             }
-
         }
     }
 
