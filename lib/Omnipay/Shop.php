@@ -15,7 +15,9 @@
 namespace Omnipay;
 
 use CoreShop\Model\Configuration;
+use CoreShop\Composite\Dispatcher;
 use CoreShop\Plugin as CorePlugin;
+use Omnipay\Model\Postfinance\Rule\CheckOrderState;
 use Omnipay\Shop\Install;
 use Omnipay\Shop\Provider;
 
@@ -54,6 +56,14 @@ class Shop
                 return $shopProvider;
             });
         }
+
+        \Pimcore::getEventManager()->attach('coreshop.rules.mailRulesOrder.condition.init', function($e) {
+            $dispatcher = $e->getTarget();
+
+            if($dispatcher instanceof Dispatcher) {
+                $dispatcher->addType(CheckOrderState::class);
+            }
+        });
     }
 
 
