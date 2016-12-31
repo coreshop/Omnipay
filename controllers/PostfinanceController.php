@@ -108,10 +108,12 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         //check if this payment transaction already has been dispatched
         $latestTransaction = $orderPayment->getLastTransactionNote();
 
+        //maybe order already has been processed by server communication. return order and return a healthy order.
         if ($latestTransaction instanceof \Pimcore\Model\Element\Note) {
             $data = $latestTransaction->data;
             if (isset($data['code']) && (int) $data['code']['data'] === $requestData['status']) {
-                throw new \Exception('OmniPay [Postfinance]: State (' . $requestData['status'] . ') already has been processed.');
+                \Pimcore\Logger::notice('OmniPay [Postfinance]: State (' . $requestData['status'] . ') already has been processed.');
+                return $order;
             }
         }
 
