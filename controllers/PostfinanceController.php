@@ -15,8 +15,6 @@
 require 'PaymentController.php';
 
 use Omnipay\Model\Postfinance\TransactionInfo;
-use Omnipay\Postfinance\Message\Helper;
-use CoreShop\Model\Order\State;
 
 /**
  * Class Omnipay_PostfinanceController
@@ -98,6 +96,9 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             throw new \Exception('OmniPay [Postfinance]: Order with identifier ' . $requestData['transaction'] . ' not found');
         }
 
+        //get current state
+        $beforeProcessedState = $order->getOrderState();
+
         //get transaction
         $orderPayment = $this->getOrderPayment(
             $order,
@@ -121,7 +122,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
         );
 
         //get right state
-        $state = $this->getState($requestData['status']);
+        $state = TransactionInfo::getState($requestData['status']);
         \Pimcore\Logger::notice('OmniPay [Postfinance]: Change order state to: ' . $state['state']);
 
         $params = [
@@ -153,6 +154,13 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             $p->save();
         }
         */
+
+        //custom mail rule.
+        \CoreShop\Model\Mail\Rule::apply('order', $order, [
+            'beforeProcessedState'  => $beforeProcessedState,
+            'newState'              => $state['state'],
+            'postfinanceStatus'     => $requestData['status']
+        ]);
 
         return $order;
 
@@ -230,55 +238,5 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
             'payIdSub'      => $payIdSub,
             'ncError'       => $ncError
         ];
-    }
-
-    private function getState($code)
-    {
-        $state = State::STATE_CANCELED;
-        $status = State::STATUS_CANCELED;
-        $invoicingPossible = false;
-
-        switch($code)
-        {
-            //1
-            case Helper::POSTFINANCE_AUTH_REFUSED:
-            case Helper::POSTFINANCE_PAYMENT_CANCELED_BY_CUSTOMER:
-            case Helper::POSTFINANCE_PAYMENT_REFUSED:
-                $state = State::STATE_CANCELED;
-                $status = State::STATE_CANCELED;
-                break;
-
-            //5
-            case Helper::POSTFINANCE_AUTHORIZED:
-            case Helper::POSTFINANCE_AUTHORIZED_WAITING:
-            case Helper::POSTFINANCE_AUTHORIZED_UNKNOWN:
-            case Helper::POSTFINANCE_AUTHORIZED_TO_GET_MANUALLY:
-                $state = State::STATE_PENDING_PAYMENT;
-                $status = State::STATUS_PENDING_PAYMENT;
-                break;
-
-            //7
-            case Helper::POSTFINANCE_PAYMENT_DELETED:
-            case Helper::POSTFINANCE_PAYMENT_DELETED_WAITING:
-            case Helper::POSTFINANCE_PAYMENT_DELETED_UNCERTAIN:
-            case Helper::POSTFINANCE_PAYMENT_DELETED_REFUSED:
-            case Helper::POSTFINANCE_PAYMENT_DELETED_OK:
-            case Helper::POSTFINANCE_PAYMENT_DELETED_PROCESSED_MERCHANT:
-                $state = State::STATE_CANCELED;
-                $status = State::STATE_CANCELED;
-                break;
-
-            //9
-            case Helper::POSTFINANCE_PAYMENT_REQUESTED:
-            case Helper::POSTFINANCE_PAYMENT_PROCESSING:
-            case Helper::POSTFINANCE_PAYMENT_UNCERTAIN:
-                $state =  State::STATE_PROCESSING;
-                $status = State::STATUS_PROCESSING;
-                $invoicingPossible = true;
-                break;
-
-        }
-
-        return ['state' => $state, 'status' => $status, 'invoicingPossible' => $invoicingPossible];
     }
 }

@@ -4,3 +4,4 @@
 "coreshop_omnipay_provider_add","Add Provider"
 "coreshop_omnipay_remove","Remove"
 "coreshop_omnipay_remove_provider","Do you really want to remove the provider?"
+"coreshop_condition_postFinanceCheckOrderState","Postfinance: Order Authorized"

@@ -2,6 +2,9 @@
 
 namespace Omnipay\Model\Postfinance;
 
+use Omnipay\Postfinance\Message\Helper;
+use CoreShop\Model\Order\State;
+
 class TransactionInfo {
 
     protected static $STATUS_TRANSLATION = [
@@ -60,5 +63,68 @@ class TransactionInfo {
         }
 
         return $transStatus;
+    }
+
+    public static function getState($code)
+    {
+        $state = State::STATE_CANCELED;
+        $status = State::STATUS_CANCELED;
+        $invoicingPossible = false;
+
+        switch($code)
+        {
+            //1
+            case Helper::POSTFINANCE_AUTH_REFUSED:
+            case Helper::POSTFINANCE_PAYMENT_CANCELED_BY_CUSTOMER:
+            case Helper::POSTFINANCE_PAYMENT_REFUSED:
+                $state = State::STATE_CANCELED;
+                $status = State::STATE_CANCELED;
+                break;
+
+            //5
+            case Helper::POSTFINANCE_AUTHORIZED:
+            case Helper::POSTFINANCE_AUTHORIZED_WAITING:
+            case Helper::POSTFINANCE_AUTHORIZED_UNKNOWN:
+            case Helper::POSTFINANCE_AUTHORIZED_TO_GET_MANUALLY:
+                $state = State::STATE_PENDING_PAYMENT;
+                $status = State::STATUS_PENDING_PAYMENT;
+                break;
+
+            //7
+            case Helper::POSTFINANCE_PAYMENT_DELETED:
+            case Helper::POSTFINANCE_PAYMENT_DELETED_WAITING:
+            case Helper::POSTFINANCE_PAYMENT_DELETED_UNCERTAIN:
+            case Helper::POSTFINANCE_PAYMENT_DELETED_REFUSED:
+            case Helper::POSTFINANCE_PAYMENT_DELETED_OK:
+            case Helper::POSTFINANCE_PAYMENT_DELETED_PROCESSED_MERCHANT:
+                $state = State::STATE_CANCELED;
+                $status = State::STATE_CANCELED;
+                break;
+
+            //9
+            case Helper::POSTFINANCE_PAYMENT_REQUESTED:
+            case Helper::POSTFINANCE_PAYMENT_PROCESSING:
+            case Helper::POSTFINANCE_PAYMENT_UNCERTAIN:
+                $state =  State::STATE_PROCESSING;
+                $status = State::STATUS_PROCESSING;
+                $invoicingPossible = true;
+                break;
+
+        }
+
+        return ['state' => $state, 'status' => $status, 'invoicingPossible' => $invoicingPossible];
+    }
+
+    public static function isAuthorized($code)
+    {
+        return in_array(
+            $code,
+            [
+                Helper::POSTFINANCE_AUTHORIZED,
+                Helper::POSTFINANCE_AUTHORIZED_WAITING,
+                Helper::POSTFINANCE_AUTHORIZED_UNKNOWN,
+                Helper::POSTFINANCE_AUTHORIZED_TO_GET_MANUALLY
+            ]
+        );
     }
 }

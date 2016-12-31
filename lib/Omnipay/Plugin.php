@@ -91,8 +91,7 @@ class Plugin extends AbstractPlugin implements PluginInterface
         }
 
         try {
-            \Pimcore\Model\Object\Objectbrick\Definition::getByKey("CoreShopPaymentOmnipay");
-
+            \Pimcore\Model\Object\Objectbrick\Definition::getByKey('CoreShopPaymentOmnipay');
             return true;
         } catch (\Exception $e) {
         }
