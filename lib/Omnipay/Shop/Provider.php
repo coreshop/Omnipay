@@ -62,7 +62,7 @@ class Provider extends CorePayment
      */
     public function getDescription()
     {
-        return "";
+        return '';
     }
 
     /**
@@ -70,7 +70,7 @@ class Provider extends CorePayment
      */
     public function getImage()
     {
-        return "/plugins/Omnipay/static/img/omnipay.jpg";
+        return '/plugins/Omnipay/static/img/omnipay.jpg';
     }
 
     /**
@@ -78,7 +78,7 @@ class Provider extends CorePayment
      */
     public function getIdentifier()
     {
-        return "omnipay" . $this->getGateway()->getShortName();
+        return 'omnipay' . $this->getGateway()->getShortName();
     }
 
     /**
@@ -112,7 +112,7 @@ class Provider extends CorePayment
      */
     public function getConfirmationUrl($order)
     {
-        return $this->url($this->getIdentifier(), "confirmation", array("order" => $order->getId()));
+        return $this->url($this->getIdentifier(), 'confirmation', array('order' => $order->getId()));
     }
 
     /**
@@ -122,7 +122,7 @@ class Provider extends CorePayment
      */
     public function getProcessValidationUrl()
     {
-        return $this->url($this->getIdentifier(), "validate");
+        return $this->url($this->getIdentifier(), 'validate');
     }
 
     /**
@@ -132,7 +132,7 @@ class Provider extends CorePayment
      */
     public function getPaymentUrl()
     {
-        return $this->url($this->getIdentifier(), "payment");
+        return $this->url($this->getIdentifier(), 'payment');
     }
 
     /**
@@ -141,9 +141,9 @@ class Provider extends CorePayment
      * @param String $errorMessage
      * @return string
      */
-    public function getErrorUrl( $errorMessage = "")
+    public function getErrorUrl( $errorMessage = '')
     {
-        return $this->url($this->getIdentifier(), "error", array("error" => $errorMessage));
+        return $this->url($this->getIdentifier(), 'error', array('error' => $errorMessage));
     }
 
     /**
@@ -189,11 +189,19 @@ class Provider extends CorePayment
      */
     public function url($module, $action, $params = [])
     {
-        $params = array_merge($params, array("gateway" => $this->getGateway()->getShortName(), "mod" => "Omnipay", "act" => $action, "lang" => (string) \Zend_Registry::get("Zend_Locale")));
+        $params = array_merge(
+            $params,
+            [
+                'gateway' => $this->getGateway()->getShortName(),
+                'mod' => 'Omnipay',
+                'act' => $action,
+                'lang' => (string) \Zend_Registry::get('Zend_Locale')
+            ]
+        );
 
-        $url = \CoreShop::getTools()->url($params, "coreshop_omnipay_payment");
-        $url = str_replace("/omnipay/", "/Omnipay/", $url);
-        $url = str_replace("/" . strtolower( $this->getGateway()->getName() ), "/" . $this->getGateway()->getName(), $url);
+        $url = \CoreShop::getTools()->url($params, 'coreshop_omnipay_payment');
+        $url = str_replace('/omnipay/', '/Omnipay/', $url);
+        $url = str_replace('/' . strtolower( $this->getGateway()->getName() ), '/' . $this->getGateway()->getName(), $url);
 
         return $url;
     }
