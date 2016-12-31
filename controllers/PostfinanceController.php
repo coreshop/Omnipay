@@ -157,7 +157,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
         //custom mail rule.
         \CoreShop\Model\Mail\Rule::apply('order', $order, [
-            'beforeProcessedState'  => $beforeProcessedState,
+            'beforeProcessedState'  => $beforeProcessedState['name'],
             'newState'              => $state['state'],
             'postfinanceStatus'     => $requestData['status']
         ]);
