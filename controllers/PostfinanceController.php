@@ -66,7 +66,7 @@ class Omnipay_PostfinanceController extends Omnipay_PaymentController
 
         try {
             $order = $this->_processRequest();
-            $this->coreShopForward('canceled', 'checkout', 'CoreShop', []);
+            parent::paymentReturnAbortAction();
         } catch(\Exception $e) {
             \Pimcore\Logger::notice($e->getMessage());
             $this->redirect($this->getModule()->getErrorUrl($e->getMessage()));

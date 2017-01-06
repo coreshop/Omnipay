@@ -95,6 +95,9 @@ class Omnipay_PaymentController extends Payment
 
     public function paymentReturnAbortAction()
     {
+        //refill cart with last known cart added from current user
+        $this->refillCart();
+
         $this->coreShopForward('canceled', 'checkout', 'CoreShop', []);
     }
 
