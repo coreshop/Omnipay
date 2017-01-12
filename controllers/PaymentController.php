@@ -21,6 +21,7 @@ class Omnipay_PaymentController extends Payment
 {
     public function paymentAction()
     {
+        /** @var \Omnipay\Postfinance\Gateway $gateway */
         $gateway = $this->getModule()->getGateway();
 
         if(!$gateway->supportsPurchase()) {
@@ -59,7 +60,10 @@ class Omnipay_PaymentController extends Payment
         }
 
         $params = $this->getGatewayParams($order);
-        $response = $gateway->purchase($params)->send();
+        $request = $gateway->purchase($params);
+
+        $data = $this->getGatewayRequestData($request);
+        $response = $request->sendData($data);
 
         if($response instanceof \Omnipay\Common\Message\ResponseInterface) {
             try {
@@ -131,6 +135,30 @@ class Omnipay_PaymentController extends Payment
         }
 
         return $this->module;
+    }
+
+    /**
+     * @param \Omnipay\Postfinance\Message\PurchaseRequest $request
+     * @return array
+     */
+    public function getGatewayRequestData($request)
+    {
+        $data = $request->getData();
+
+        $results = \Pimcore::getEventManager()->trigger(
+            'coreshop.payment.omnipay.preGatewayRequestPayment',
+            null,
+            [ 'data' => $data ]
+        );
+
+        if ($results->count()) {
+            $result = $results->last();
+            if (is_array($result)) {
+                $data = $result;
+            }
+        }
+
+        return $data;
     }
 
     /**
