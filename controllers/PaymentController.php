@@ -176,6 +176,10 @@ class Omnipay_PaymentController extends Payment
         $params = $this->getAllParams();
         $params['returnUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), 'payment-return');
         $params['cancelUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), 'payment-return-abort');
+
+        // notifyUrl = declineUrl
+        $params['notifyUrl'] = Pimcore\Tool::getHostUrl() . $this->getModule()->url($this->getModule()->getIdentifier(), 'payment-return-abort');
+
         $params['amount'] = $order->getTotal();
         $params['currency'] = $order->getCurrency()->getIsoCode();
         $params['transactionId'] = 'order_' . $order->getId();
